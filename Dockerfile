@@ -75,13 +75,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     ACESTEP_PROJECT_ROOT=/app \
     ACESTEP_CHECKPOINT_DIR=/app/checkpoints \
     ACESTEP_OUTPUT_DIR=/app/outputs \
-    ACESTEP_AUDIO_DIR=/app/outputs \
+    ACESTEP_TMPDIR=/app/outputs \
     ACESTEP_DEVICE=cuda \
     ACESTEP_DIT_CONFIG=acestep-v15-turbo \
     ACESTEP_LM_MODEL=acestep-5Hz-lm-1.7B \
     ACESTEP_LM_BACKEND=vllm \
-    # Triton cache directory (for vllm JIT compilation)
-    TRITON_CACHE_DIR=/app/.triton_cache \
+    # Triton/Inductor cache directories (for vllm JIT compilation)
+    TRITON_CACHE_DIR=/app/.cache/triton \
+    TORCHINDUCTOR_CACHE_DIR=/app/.cache/torchinductor \
     # Server configuration
     HOST=0.0.0.0 \
     PORT=8000
@@ -115,7 +116,8 @@ COPY --from=model-downloader --chown=appuser:appuser /models/checkpoints /app/ch
 # No custom application code needed - using ACE-Step's built-in API server
 
 # Create output and cache directories with correct ownership
-RUN mkdir -p /app/outputs /app/.triton_cache && chown -R appuser:appuser /app/outputs /app/.triton_cache
+RUN mkdir -p /app/outputs /app/.cache/triton /app/.cache/torchinductor && \
+    chown -R appuser:appuser /app/outputs /app/.cache
 
 USER appuser
 
