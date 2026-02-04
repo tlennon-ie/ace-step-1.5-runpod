@@ -23,10 +23,9 @@ Generate high-quality music from text descriptions using ACE-Step 1.5 - an open-
 
 ## Quick Start
 
-Once the pod is running, the API is available at:
-```
-http://<POD_IP>:8000
-```
+Once the pod is running:
+- **Gradio UI**: `http://<POD_IP>:7860` - Web interface for music generation
+- **REST API**: `http://<POD_IP>:8000` - Programmatic access
 
 ### Generate Music
 

@@ -113,7 +113,9 @@ RUN ln -sf /usr/bin/python3.11 /opt/venv/bin/python && \
 # Copy models from model-downloader stage with correct ownership
 COPY --from=model-downloader --chown=appuser:appuser /models/checkpoints /app/checkpoints
 
-# No custom application code needed - using ACE-Step's built-in API server
+# Copy startup script
+COPY --chown=appuser:appuser start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Create output and cache directories with correct ownership
 RUN mkdir -p /app/outputs /app/.cache/triton /app/.cache/torchinductor && \
@@ -121,12 +123,12 @@ RUN mkdir -p /app/outputs /app/.cache/triton /app/.cache/torchinductor && \
 
 USER appuser
 
-# Expose port
-EXPOSE 8000
+# Expose ports (8000 for API, 7860 for Gradio UI)
+EXPOSE 8000 7860
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-# Run ACE-Step's built-in API server
-CMD ["acestep-api", "--host", "0.0.0.0", "--port", "8000"]
+# Run both API server and Gradio UI
+CMD ["/app/start.sh"]
