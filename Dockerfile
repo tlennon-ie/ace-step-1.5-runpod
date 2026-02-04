@@ -6,35 +6,7 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Stage 1: Builder - Install dependencies and build wheels
-# -----------------------------------------------------------------------------
-FROM python:3.11-slim as builder
-
-WORKDIR /build
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    git \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv for faster dependency resolution
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:$PATH"
-
-# Create virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Clone ACE-Step and install using uv (handles all dependencies including nano-vllm)
-RUN git clone https://github.com/ace-step/ACE-Step-1.5.git /tmp/acestep && \
-    cd /tmp/acestep && \
-    uv pip install --no-cache . && \
-    rm -rf /tmp/acestep/.git
-
-# -----------------------------------------------------------------------------
-# Stage 2: Model Downloader - Download models from HuggingFace
+# Stage 1: Model Downloader - Download models from HuggingFace
 # -----------------------------------------------------------------------------
 FROM python:3.11-slim as model-downloader
 
@@ -66,15 +38,13 @@ RUN python -c "import os; from huggingface_hub import snapshot_download; snapsho
 # RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('ACE-Step/acestep-v15-turbo-shift3', local_dir='/models/checkpoints/acestep-v15-turbo-shift3')"
 
 # -----------------------------------------------------------------------------
-# Stage 3: Runtime - Minimal image for running the application
+# Stage 2: Runtime - Install ACE-Step and run from /app
 # -----------------------------------------------------------------------------
 FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04 as runtime
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    PATH="/opt/venv/bin:$PATH" \
     # ACE-Step configuration
     ACESTEP_PROJECT_ROOT=/app \
     ACESTEP_OUTPUT_DIR=/app/outputs \
@@ -90,24 +60,30 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Install system dependencies including Python, pip, git, and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11 \
-    python3.11-venv \
+    python3.11-dev \
+    python3-pip \
+    git \
+    curl \
+    build-essential \
     libsndfile1 \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/bin/python3.11 /usr/bin/python
 
-# Copy virtual environment from builder
-COPY --from=builder /opt/venv /opt/venv
+# Install uv for faster dependency resolution
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
 
-# Fix venv Python symlink to point to runtime Python
-RUN ln -sf /usr/bin/python3.11 /opt/venv/bin/python && \
-    ln -sf /usr/bin/python3.11 /opt/venv/bin/python3 && \
-    ln -sf /usr/bin/python3.11 /opt/venv/bin/python3.11
+# Clone ACE-Step directly into /app and install
+# This ensures ./checkpoints resolves to /app/checkpoints
+RUN git clone https://github.com/ace-step/ACE-Step-1.5.git /app && \
+    rm -rf /app/.git && \
+    uv pip install --system --no-cache .
 
-# Copy models from model-downloader stage
+# Copy models from model-downloader stage into /app/checkpoints
 COPY --from=model-downloader /models/checkpoints /app/checkpoints
 
 # Copy startup script
