@@ -1,30 +1,30 @@
 # FastAPI and server
-fastapi>=0.115.0
-uvicorn[standard]>=0.34.0
-python-multipart>=0.0.9
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
 
 # ACE-Step (installed from git or local)
 # acestep @ git+https://github.com/ace-step/ACE-Step-1.5.git
 
 # Core dependencies (these are also required by acestep)
 # Note: torch/torchaudio versions are pinned in Dockerfile for CUDA compatibility
-torch>=2.10.0
-torchaudio>=2.10.0
-transformers>=4.51.0,<4.58.0
-accelerate>=1.12.0
-safetensors>=0.5.0
-einops>=0.8.0
-scipy>=1.14.0
-numpy>=2.0.0
+torch==2.10.0
+torchaudio==2.10.0
+transformers==4.51.0
+accelerate==1.12.0
+safetensors==0.5.2
+einops==0.8.2
+scipy==1.14.1
+numpy==2.0.2
 
 # Audio processing
-soundfile>=0.13.0
-librosa>=0.10.2
+soundfile==0.13.1
+librosa==0.10.2
 
 # LLM backend
-vllm>=0.8.0
+vllm==0.8.5
 
 # Utilities
-pydantic>=2.10.0
-huggingface-hub>=0.27.0
-tqdm>=4.67.0
+pydantic==2.10.6
+huggingface-hub==0.27.1
+tqdm==4.67.1
