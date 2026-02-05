@@ -2,13 +2,13 @@
 
 A Docker image for running ACE-Step 1.5's built-in API server with models pre-baked.
 
-[![ValyrianTech](https://img.shields.io/badge/ValyrianTech-Links-blue)](https://linktr.ee/ValyrianTech) [![Patreon](https://img.shields.io/badge/Patreon-Support-orange)](http://patreon.com/ValyrianTech)
+Original credit to https://github.com/ValyrianTech/ace-step-1.5
 
 ## Deploy on RunPod
 
 The fastest way to get started is to deploy the pre-built image on RunPod:
 
-[![Deploy on RunPod](https://img.shields.io/badge/RunPod-Deploy-blueviolet?logo=runpod)](https://console.runpod.io/deploy?template=uuc79b5j3c&ref=2vdt3dn9)
+[![Deploy on RunPod](https://img.shields.io/badge/RunPod-Deploy-blueviolet?logo=runpod)](https://console.runpod.io/deploy?template=uuc79b5j3c&ref=351mnsv2)
 
 This template includes all models pre-loaded and is ready to use immediately. Once deployed:
 - **REST API**: `https://<POD_ID>-8000.proxy.runpod.net`
@@ -19,6 +19,7 @@ This template includes all models pre-loaded and is ready to use immediately. On
 - **Multi-stage Docker build** with models baked in (~15GB image)
 - **GPU support** via NVIDIA CUDA 12.8 runtime
 - **LLM-powered features**: lyrics/caption formatting
+- Jupyter notebook, to pull from huggingface and deploy models to HF
 
 ## Quick Start
 
