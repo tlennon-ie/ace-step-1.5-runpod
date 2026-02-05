@@ -30,5 +30,12 @@ echo "All services started. Logs available at /app/outputs/"
 echo "  - Gradio UI: /app/outputs/gradio.log"
 echo "  - API Server: /app/outputs/api.log"
 
+# Start Jupyter Lab on port 8888
+echo "Starting Jupyter Lab on port 8888..."
+pip install jupyterlab # Ensure it's installed
+jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' > /app/outputs/jupyter.log 2>&1 &
+JUPYTER_PID=$!
+echo "Jupyter Lab started with PID $JUPYTER_PID"
+
 # Keep container running for RunPod web terminal
 sleep infinity
