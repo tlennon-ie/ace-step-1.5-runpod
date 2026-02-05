@@ -21,7 +21,7 @@ fi
 # 2. Set Paths
 CONFIG_PATH="${ACESTEP_CONFIG_PATH:-$MODEL_DIR/acestep-v15-base}"
 LM_MODEL_PATH="${ACESTEP_LM_MODEL_PATH:-$MODEL_DIR/acestep-5Hz-lm-1.7B}"
-
+python3 -m pip install tensorboard
 # 3. Start Jupyter Lab in background (Port 8888)
 echo "Starting Jupyter Lab on port 8888..."
 jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root \
