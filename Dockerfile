@@ -101,7 +101,7 @@ RUN chmod +x /app/start.sh
 RUN mkdir -p /app/outputs
 
 # Expose ports (8000 for API, 7860 for Gradio UI)
-EXPOSE 8000 7860
+EXPOSE 8000 7860 8888
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
