@@ -81,7 +81,7 @@ ENV PATH="/root/.local/bin:$PATH"
 RUN git clone https://github.com/ace-step/ACE-Step-1.5.git /app && \
     rm -rf /app/.git && \
     uv pip install --system --no-cache .
-
+RUN uv pip install --system --no-cache . jupyterlab
 # Create symlink so ACE-Step's model discovery finds /app/checkpoints
 # ACE-Step uses __file__ to locate checkpoints relative to its install path
 RUN ln -s /app/checkpoints /usr/local/lib/python3.11/dist-packages/checkpoints
