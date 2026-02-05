@@ -1,41 +1,44 @@
 #!/bin/bash
-# Start both ACE-Step API server and Gradio UI
+# Start script for ACE-Step on RunPod with Jupyter Integration
 
-echo "Starting ACE-Step services..."
+# 1. Ensure models exist (Download if missing)
+# Using /workspace/models if a persistent volume is attached, otherwise /app/models
+MODEL_DIR="${PERSISTENT_VOLUME_ROOT:-/app}/checkpoints"
+mkdir -p "$MODEL_DIR"
 
-# Model paths (pre-baked in Docker image)
-CONFIG_PATH="${ACESTEP_CONFIG_PATH:-/app/checkpoints/acestep-v15-base}"
-LM_MODEL_PATH="${ACESTEP_LM_MODEL_PATH:-/app/checkpoints/acestep-5Hz-lm-1.7B}"
+if [ -z "$(ls -A $MODEL_DIR 2>/dev/null)" ]; then
+    echo "Models not found in $MODEL_DIR. Downloading from Hugging Face..."
+    # Ensure HF_TOKEN is available as an environment variable in RunPod
+    python3 -m huggingface_hub snapshot_download \
+        --repo_id "ACE-Step/Ace-Step1.5" \
+        --local_dir "$MODEL_DIR" \
+        --token "$HF_TOKEN" \
+        --ignore_patterns "acestep-v15-turbo/*"
+else
+    echo "Models already present in $MODEL_DIR. Skipping download."
+fi
 
-echo "Using DiT model: $CONFIG_PATH"
-echo "Using LM model: $LM_MODEL_PATH"
+# 2. Set Paths
+CONFIG_PATH="${ACESTEP_CONFIG_PATH:-$MODEL_DIR/acestep-v15-base}"
+LM_MODEL_PATH="${ACESTEP_LM_MODEL_PATH:-$MODEL_DIR/acestep-5Hz-lm-1.7B}"
 
-# Start Gradio UI in background on port 7860 (with logging)
-echo "Starting Gradio UI on port 7860..."
-acestep --server-name 0.0.0.0 --port 7860 --init_service true --config_path "$CONFIG_PATH" --lm_model_path "$LM_MODEL_PATH" --backend pt 2>&1 | tee /app/outputs/gradio.log &
-GRADIO_PID=$!
-echo "Gradio UI started with PID $GRADIO_PID"
-
-# Wait for Gradio to initialize before starting API server
-sleep 10
-
-# Start API server on port 8000 (with logging)
-# API server reads config from environment variables: ACESTEP_CONFIG_PATH, ACESTEP_LM_MODEL_PATH
-echo "Starting API server on port 8000..."
-acestep-api --host 0.0.0.0 --port 8000 2>&1 | tee /app/outputs/api.log &
-API_PID=$!
-echo "API server started with PID $API_PID"
-
-echo "All services started. Logs available at /app/outputs/"
-echo "  - Gradio UI: /app/outputs/gradio.log"
-echo "  - API Server: /app/outputs/api.log"
-
-# Start Jupyter Lab on port 8888
+# 3. Start Jupyter Lab in background (Port 8888)
 echo "Starting Jupyter Lab on port 8888..."
-pip install jupyterlab # Ensure it's installed
-jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' > /app/outputs/jupyter.log 2>&1 &
-JUPYTER_PID=$!
-echo "Jupyter Lab started with PID $JUPYTER_PID"
+jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root \
+    --NotebookApp.token='' --NotebookApp.password='' \
+    --NotebookApp.allow_origin='*' > /app/jupyter.log 2>&1 &
 
-# Keep container running for RunPod web terminal
+# 4. Start Gradio UI in background (Port 7860)
+echo "Starting Gradio UI..."
+acestep --server-name 0.0.0.0 --port 7860 --init_service true \
+    --config_path "$CONFIG_PATH" --lm_model_path "$LM_MODEL_PATH" \
+    --backend pt 2>&1 | tee /app/gradio.log &
+
+# 5. Start API server in background (Port 8000)
+sleep 10
+echo "Starting API server..."
+acestep-api --host 0.0.0.0 --port 8000 2>&1 | tee /app/api.log &
+
+echo "All services initiated."
+# Keep container alive
 sleep infinity
